@@ -101,4 +101,23 @@ class CartController extends Controller
             );
         }
     }
+
+
+    public function clearCart(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        // Delete all items from the user's cart
+        $CartAll = Cart::where('user_id', $user->id)->delete();
+
+        return response()->json([
+            'message' => 'Cart cleared successfully'
+        ], 200);
+    }
 }
