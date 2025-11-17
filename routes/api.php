@@ -29,6 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/cart/add/{productId}', [CartController::class, 'addToCart']);
     Route::get('/cart', [CartController::class, 'viewCart']);
     Route::delete('/cart/remove/{productId}', [CartController::class, 'removeFromCart']);
+    Route::post('/cart/create-payment-intent', [CartController::class, 'createPaymentIntent']);
 
     Route::get('/products', [ProductController::class, 'index']);       // List all products
     Route::get('/products/{id}', [ProductController::class, 'show']);   // Get single product

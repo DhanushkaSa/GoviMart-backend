@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Cart;
 use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
+use Stripe\Stripe;
+use Stripe\PaymentIntent;
 
 class CartController extends Controller
 {
@@ -65,5 +67,38 @@ class CartController extends Controller
         }
 
         return response()->json(['success' => false, 'message' => 'Product not found in cart'], 404);
+    }
+
+    public function createPaymentIntent(Request $request)
+    {
+        try {
+            if ($request->amount > 0) {
+
+                Stripe::setApiKey(env('STRIPE_SECRET_KEY'));
+                $paymentIntent = PaymentIntent::create([
+                    'amount' => $request->amount * 100, // Convert to cents
+                    'currency' => 'usd',
+                    'payment_method_types' => ['card'],
+                ]);
+
+                $clientSecret = $paymentIntent->client_secret;
+
+                return response()->json(
+                    [
+                        'status' => 200,
+                        'clientSecret' => $clientSecret,
+                    ]
+
+                );
+            }
+        } catch (\Exception $e) {
+            return response()->json(
+                [
+                    'status' => 400,
+                    'message' => 'Amount must be greater than 0'
+                ]
+
+            );
+        }
     }
 }
