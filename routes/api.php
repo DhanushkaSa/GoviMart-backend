@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProductController;
+use Chatify\Http\Controllers\Api\MessagesController;
+use Illuminate\Support\Facades\Broadcast;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -37,4 +39,36 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/products', [ProductController::class, 'store']);      // Add product
     Route::put('/products/{id}', [ProductController::class, 'update']); // Update product
     Route::delete('/products/{id}', [ProductController::class, 'destroy']); // Delete product
+
+
+
+    Route::post('/broadcasting/auth', function (Request $request) {
+        // Validate bearer token manually
+        // $user = auth('sanctum')->user();
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        return Broadcast::auth($request);
+    });
+
+
+
+
+    Route::post('/chat/auth', [MessagesController::class, 'pusherAuth'])->name('api.pusher.auth');
+    Route::post('/idInfo', [MessagesController::class, 'idFetchData'])->name('api.idInfo');
+    Route::post('/sendMessage', [MessagesController::class, 'send'])->name('api.send.message');
+    Route::post('/fetchMessages', [MessagesController::class, 'fetch'])->name('api.fetch.messages');
+    Route::get('/download/{fileName}', [MessagesController::class, 'download'])->name('api.download');
+    Route::post('/makeSeen', [MessagesController::class, 'seen'])->name('api.messages.seen');
+    Route::get('/getContacts', [MessagesController::class, 'getContacts'])->name('api.contacts.get');
+    Route::post('/star', [MessagesController::class, 'favorite'])->name('api.star');
+    Route::post('/favorites', [MessagesController::class, 'getFavorites'])->name('api.favorites');
+    Route::get('/search', [MessagesController::class, 'search'])->name('api.search');
+    Route::post('/shared', [MessagesController::class, 'sharedPhotos'])->name('api.shared');
+    Route::post('/deleteConversation', [MessagesController::class, 'deleteConversation'])->name('api.conversation.delete');
+    Route::post('/updateSettings', [MessagesController::class, 'updateSettings'])->name('api.avatar.update');
+    Route::post('/setActiveStatus', [MessagesController::class, 'setActiveStatus'])->name('api.activeStatus.set');
 });
