@@ -49,4 +49,9 @@ class User extends Authenticatable
         // A user (who is a farmer) has one vendor profile
         return $this->hasOne(Vendor::class);
     }
+
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
 }

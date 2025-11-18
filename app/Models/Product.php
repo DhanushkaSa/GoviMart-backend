@@ -19,6 +19,12 @@ class Product extends Model
         'stock',
         'rating',
         'rating_count',
-        'image'
+        'image',
+        'user_id'
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

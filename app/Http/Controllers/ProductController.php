@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
+use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
 {
     // List all products
     public function index()
     {
-        $products = Product::all();
+        $products = Product::with('user')->get(); // Include user info if needed
         return response()->json([
             'success' => true,
             'products' => $products
@@ -20,7 +21,7 @@ class ProductController extends Controller
     // Show a single product
     public function show($id)
     {
-        $product = Product::find($id);
+        $product = Product::with('user')->find($id);
 
         if (!$product) {
             return response()->json(['success' => false, 'message' => 'Product not found'], 404);
@@ -30,10 +31,8 @@ class ProductController extends Controller
     }
 
     // Create a new product
-    // Create a new product
     public function store(Request $request)
     {
-        // This validates the data and stores it in a variable
         $validatedData = $request->validate([
             'name' => 'required|string',
             'brand' => 'nullable|string',
@@ -47,31 +46,18 @@ class ProductController extends Controller
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ]);
 
-        // --- START: THIS IS THE NEW BLOCK ---
-
-        // 1. Check if an image file was uploaded
-        $imagePath = null;
         if ($request->hasFile('image')) {
-
-            // 2. THIS IS THE LINE YOU ASKED ABOUT:
-            // It saves the file and gets the path.
-            $imagePath = $request->file('image')->store('products', 'public');
+            $validatedData['image'] = $request->file('image')->store('products', 'public');
         }
 
-        // 3. Prepare all the text data from validation
-        // (We use $validatedData instead of $request->all() for security)
-        $dataToCreate = $validatedData;
+        // Set the user_id from authenticated user
+        $validatedData['user_id'] = Auth::id();
 
-        // 4. Add the image path (or null) to the data
-        $dataToCreate['image'] = $imagePath;
+        $product = Product::create($validatedData);
 
-        // 5. Create the product using this new, correct data
-        $product = Product::create($dataToCreate);
-
-        // --- END: NEW BLOCK ---
-
-        return response()->json(['success' => true, 'product' => $product], 201); // 201 means "Created"
+        return response()->json(['success' => true, 'product' => $product], 201);
     }
+
 
     // Update a product
     public function update(Request $request, $id)
@@ -82,7 +68,29 @@ class ProductController extends Controller
             return response()->json(['success' => false, 'message' => 'Product not found'], 404);
         }
 
-        $product->update($request->all());
+        // Only the owner can update (optional but recommended)
+        if ($product->user_id !== Auth::id()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $validatedData = $request->validate([
+            'name' => 'sometimes|string',
+            'brand' => 'nullable|string',
+            'location' => 'nullable|string',
+            'best_before' => 'nullable|date',
+            'price' => 'sometimes|numeric',
+            'original_price' => 'nullable|numeric',
+            'stock' => 'nullable|integer',
+            'rating' => 'nullable|numeric',
+            'rating_count' => 'nullable|integer',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        ]);
+
+        if ($request->hasFile('image')) {
+            $validatedData['image'] = $request->file('image')->store('products', 'public');
+        }
+
+        $product->update($validatedData);
 
         return response()->json(['success' => true, 'product' => $product]);
     }
@@ -94,6 +102,11 @@ class ProductController extends Controller
 
         if (!$product) {
             return response()->json(['success' => false, 'message' => 'Product not found'], 404);
+        }
+
+        // Only the owner can delete (optional)
+        if ($product->user_id !== Auth::id()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
         $product->delete();
