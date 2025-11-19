@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\UserController;
 use Chatify\Http\Controllers\Api\MessagesController;
 use Illuminate\Support\Facades\Broadcast;
 
@@ -17,6 +18,8 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/products/all', [ProductController::class, 'allProducts']);
 Route::patch('/admin/products/{id}/status', [ProductController::class, 'updateStatus']);
 Route::get('/admin/products/all', [ProductController::class, 'allProductsForAdmin']);
+Route::get('/admin/users', [UserController::class, 'index']);
+// Route::get('/admin/products', [ProductController::class, 'index']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {

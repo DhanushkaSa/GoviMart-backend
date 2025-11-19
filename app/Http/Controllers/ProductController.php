@@ -134,12 +134,13 @@ class ProductController extends Controller
     }
 
     public function allProductsForAdmin()
-{
-    $products = Product::with('user')->get(); // fetch all products regardless of status
-    return response()->json([
-        'success' => true,
-        'products' => $products
-    ]);
-}
+    {
+        $products = Product::with('user')->get(); // fetch all products regardless of status
+        return response()->json([
+            'success' => true,
+            'products' => $products
+        ]);
+    }
 
+ 
 }
