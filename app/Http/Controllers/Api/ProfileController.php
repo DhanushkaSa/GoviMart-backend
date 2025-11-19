@@ -45,7 +45,7 @@ class ProfileController extends Controller
             'fullName' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'phone' => ['required', 'string', 'max:20', Rule::unique('users', 'phone_number')->ignore($user->id)],
-            'location' => 'nullable|string|max:255',
+            // 'location' => 'nullable|string|max:255',
 
             'farmName' => 'required|string|max:255',
             'farmAddress' => 'required|string|max:255',
@@ -62,16 +62,16 @@ class ProfileController extends Controller
                     'name' => $validated['fullName'],
                     'email' => $validated['email'],
                     'phone_number' => $validated['phone'],
-                    'location' => $validated['location'],
+                    // 'location' => $validated['location'],
                 ]);
 
                 // Update the related 'vendors' table
                 $user->vendor()->update([
                     'farm_name' => $validated['farmName'],
                     'farm_address' => $validated['farmAddress'],
-                    'farm_size' => $validated['farmSize'],
-                    'experience' => $validated['experience'],
-                    'farm_description' => $validated['description'],
+                    'farm_size' => $validated['farmSize'] ?? null,
+                    'experience' => $validated['experience'] ?? null,
+                    'farm_description' => $validated['description'] ?? null,
                 ]);
             });
         } catch (\Exception $e) {

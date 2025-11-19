@@ -70,37 +70,40 @@ class CartController extends Controller
     }
 
     public function createPaymentIntent(Request $request)
-    {
-        try {
-            if ($request->amount > 0) {
+{
+    $amount = $request->amount;
+    //  dd(env('STRIPE_SECRET_KEY'));
 
-                Stripe::setApiKey(env('STRIPE_SECRET_KEY'));
-                $paymentIntent = PaymentIntent::create([
-                    'amount' => $request->amount * 100, // Convert to cents
-                    'currency' => 'usd',
-                    'payment_method_types' => ['card'],
-                ]);
 
-                $clientSecret = $paymentIntent->client_secret;
-
-                return response()->json(
-                    [
-                        'status' => 200,
-                        'clientSecret' => $clientSecret,
-                    ]
-
-                );
-            }
-        } catch (\Exception $e) {
-            return response()->json(
-                [
-                    'status' => 400,
-                    'message' => 'Amount must be greater than 0'
-                ]
-
-            );
-        }
+    // Validation FIRST
+    if (!$amount || $amount <= 0) {
+        return response()->json([
+            'status' => 400,
+            'message' => 'Amount must be greater than 0'
+        ], 400);
     }
+
+    try {
+        Stripe::setApiKey(env('STRIPE_SECRET_KEY'));
+
+        $paymentIntent = PaymentIntent::create([
+            'amount' => $amount * 100, // convert to cents
+            'currency' => 'usd',
+            'payment_method_types' => ['card'],
+        ]);
+
+        return response()->json([
+            'status' => 200,
+            'clientSecret' => $paymentIntent->client_secret,
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 500,
+            'message' => 'Stripe error: ' . $e->getMessage()
+        ], 500);
+    }
+}
 
 
     public function clearCart(Request $request)
