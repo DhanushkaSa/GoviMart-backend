@@ -11,7 +11,8 @@ class ProductController extends Controller
     // List all products
     public function index()
     {
-        $products = Product::with('user')->get(); // Include user info if needed
+        // $products = Product::with('user')->get();
+        $products = Product::where('user_id', Auth::id())->get(); // Include user info if needed
         return response()->json([
             'success' => true,
             'products' => $products
@@ -112,5 +113,14 @@ class ProductController extends Controller
         $product->delete();
 
         return response()->json(['success' => true, 'message' => 'Product deleted']);
+    }
+
+    public function allProducts()
+    {
+        $products = Product::with('user')->get(); // all farmers
+        return response()->json([
+            'success' => true,
+            'products' => $products
+        ]);
     }
 }

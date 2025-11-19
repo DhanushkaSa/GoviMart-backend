@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Broadcast;
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/products/all', [ProductController::class, 'allProducts']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -39,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/products', [ProductController::class, 'store']);      // Add product
     Route::put('/products/{id}', [ProductController::class, 'update']); // Update product
     Route::delete('/products/{id}', [ProductController::class, 'destroy']); // Delete product
+     // List all products
 
 
 
