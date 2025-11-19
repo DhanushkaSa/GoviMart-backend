@@ -117,10 +117,29 @@ class ProductController extends Controller
 
     public function allProducts()
     {
-        $products = Product::with('user')->get(); // all farmers
+        $products = Product::with('user')->where('status', 'approved')->get(); // all farmers
         return response()->json([
             'success' => true,
             'products' => $products
         ]);
     }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+        $product->status = $request->status; // 'approved' or 'rejected'
+        $product->save();
+
+        return response()->json(['success' => true, 'product' => $product]);
+    }
+
+    public function allProductsForAdmin()
+{
+    $products = Product::with('user')->get(); // fetch all products regardless of status
+    return response()->json([
+        'success' => true,
+        'products' => $products
+    ]);
+}
+
 }
