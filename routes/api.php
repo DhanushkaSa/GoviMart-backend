@@ -30,6 +30,8 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user()->load('vendor');
     });
 
+    Route::get('/me', [UserController::class, 'me']);
+
     Route::get('/profile', [ProfileController::class, 'getProfile']);
     Route::put('/profile', [ProfileController::class, 'updateProfile']); // <-- ADDED (For saving data)
     Route::post('/profile/password', [ProfileController::class, 'updatePassword']); // <-- ADDED
