@@ -5,6 +5,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProductController;
@@ -19,7 +20,7 @@ Route::get('/products/all', [ProductController::class, 'allProducts']);
 Route::patch('/admin/products/{id}/status', [ProductController::class, 'updateStatus']);
 Route::get('/admin/products/all', [ProductController::class, 'allProductsForAdmin']);
 Route::get('/admin/users', [UserController::class, 'index']);
-// Route::get('/admin/products', [ProductController::class, 'index']);
+
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -78,4 +79,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/deleteConversation', [MessagesController::class, 'deleteConversation'])->name('api.conversation.delete');
     Route::post('/updateSettings', [MessagesController::class, 'updateSettings'])->name('api.avatar.update');
     Route::post('/setActiveStatus', [MessagesController::class, 'setActiveStatus'])->name('api.activeStatus.set');
+
+
+    Route::get('/farmer/orders', [OrderController::class, 'getFarmerOrders']);
+    Route::post('/cart/payment-success', [CartController::class, 'paymentSuccess']);
 });

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Cart;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
 use Stripe\Stripe;
@@ -70,40 +72,39 @@ class CartController extends Controller
     }
 
     public function createPaymentIntent(Request $request)
-{
-    $amount = $request->amount;
-    //  dd(env('STRIPE_SECRET_KEY'));
+    {
+        $amount = $request->amount;
+        //  dd(env('STRIPE_SECRET_KEY'));
 
 
-    // Validation FIRST
-    if (!$amount || $amount <= 0) {
-        return response()->json([
-            'status' => 400,
-            'message' => 'Amount must be greater than 0'
-        ], 400);
+        // Validation FIRST
+        if (!$amount || $amount <= 0) {
+            return response()->json([
+                'status' => 400,
+                'message' => 'Amount must be greater than 0'
+            ], 400);
+        }
+
+        try {
+            Stripe::setApiKey(env('STRIPE_SECRET_KEY'));
+
+            $paymentIntent = PaymentIntent::create([
+                'amount' => $amount * 100, // convert to cents
+                'currency' => 'usd',
+                'payment_method_types' => ['card'],
+            ]);
+
+            return response()->json([
+                'status' => 200,
+                'clientSecret' => $paymentIntent->client_secret,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 500,
+                'message' => 'Stripe error: ' . $e->getMessage()
+            ], 500);
+        }
     }
-
-    try {
-        Stripe::setApiKey(env('STRIPE_SECRET_KEY'));
-
-        $paymentIntent = PaymentIntent::create([
-            'amount' => $amount * 100, // convert to cents
-            'currency' => 'usd',
-            'payment_method_types' => ['card'],
-        ]);
-
-        return response()->json([
-            'status' => 200,
-            'clientSecret' => $paymentIntent->client_secret,
-        ]);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => 500,
-            'message' => 'Stripe error: ' . $e->getMessage()
-        ], 500);
-    }
-}
 
 
     public function clearCart(Request $request)
@@ -122,5 +123,47 @@ class CartController extends Controller
         return response()->json([
             'message' => 'Cart cleared successfully'
         ], 200);
+    }
+
+
+    public function paymentSuccess(Request $request)
+    {
+        $user = Auth::user();
+
+        $cartItems = Cart::with('product')->where('user_id', $user->id)->get();
+
+        if ($cartItems->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cart is empty'
+            ], 400);
+        }
+
+        // Create order
+        $order = Order::create([
+            'buyer_id' => $user->id,
+            'total_amount' => $cartItems->sum(fn($item) => $item->product->price * $item->quantity),
+            'status' => 'paid',
+        ]);
+
+        // Create order items
+        foreach ($cartItems as $item) {
+            OrderItem::create([
+                'order_id' => $order->id,
+                'product_id' => $item->product->id,
+                'farmer_id' => $item->product->user_id, // the farmer who owns the product
+                'quantity' => $item->quantity,
+                'price' => $item->product->price,
+            ]);
+        }
+
+        // Clear cart
+        Cart::where('user_id', $user->id)->delete();
+
+        return response()->json([
+            'success' => true,
+            'order_id' => $order->id,
+            'message' => 'Order created successfully'
+        ]);
     }
 }
